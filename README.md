@@ -119,6 +119,4 @@ open vertex-cover.html
 
 ---
 
-## Licență
 
-MIT
