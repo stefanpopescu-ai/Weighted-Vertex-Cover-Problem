@@ -1,0 +1,1072 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Acoperire cu Vârfuri Ponderate · Aproximare LP de factor 2</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,300;0,400;0,500;0,700;1,400&family=Syne:wght@700;800&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:              #0b0e14;
+  --panou:           #10141c;
+  --panou2:          #141923;
+  --bordura:         #1e2633;
+  --bordura2:        #2a3546;
+  --text:            #c0cfe0;
+  --text-dim:        #5a6e87;
+  --text-hi:         #e8f0fc;
+  --albastru:        #4d8af0;
+  --albastru-dim:    #1a2e50;
+  --chihlimbar:      #f0a030;
+  --chihlimbar-dim:  #3a2608;
+  --verde:           #3ecf72;
+  --verde-dim:       #0d2a1a;
+  --rosu:            #f0604a;
+  --mono:            'JetBrains Mono', 'Courier New', monospace;
+  --display:         'Syne', sans-serif;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body {
+  height: 100%;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--mono);
+  overflow: hidden;
+}
+
+#app {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+}
+
+/* ── ANTET ── */
+#antet {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 0 20px;
+  height: 50px;
+  background: var(--panou);
+  border-bottom: 1px solid var(--bordura);
+  flex-shrink: 0;
+}
+
+#antet h1 {
+  font-family: var(--display);
+  font-size: 16px;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  color: var(--text-hi);
+}
+
+#antet .eticheta {
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  color: var(--albastru);
+  text-transform: uppercase;
+  padding: 3px 8px;
+  border: 1px solid var(--albastru-dim);
+  border-radius: 3px;
+  background: #0d1d38;
+}
+
+#statistici-graf {
+  margin-left: auto;
+  font-size: 11px;
+  color: var(--text-dim);
+  letter-spacing: 0.06em;
+}
+
+/* ── PRINCIPAL ── */
+#principal {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+}
+
+/* ── PANOU STÂNGA ── */
+#panou-lp {
+  width: 330px;
+  min-width: 260px;
+  flex-shrink: 0;
+  background: var(--panou);
+  border-right: 1px solid var(--bordura);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.sectiune {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border-bottom: 1px solid var(--bordura);
+}
+.sectiune:last-child  { flex: 1; border-bottom: none; }
+.sectiune.formulare   { flex: 1.4; }
+.sectiune.solutie     { flex: 1; }
+
+.titlu-sectiune {
+  flex-shrink: 0;
+  padding: 7px 14px;
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--albastru);
+  background: #0d1524;
+  border-bottom: 1px solid var(--bordura);
+}
+
+.corp-sectiune {
+  flex: 1;
+  overflow-y: auto;
+  padding: 14px 16px;
+  font-size: 12px;
+  line-height: 1.75;
+}
+
+.corp-sectiune::-webkit-scrollbar { width: 4px; }
+.corp-sectiune::-webkit-scrollbar-track { background: transparent; }
+.corp-sectiune::-webkit-scrollbar-thumb { background: var(--bordura2); border-radius: 2px; }
+
+/* Culori sintaxă LP */
+.kw  { color: #e07b3c; font-weight: 700; }
+.vr  { color: #79b8ff; }
+.wt  { color: #f0b420; }
+.op  { color: var(--text-dim); }
+.cm  { color: var(--text-dim); font-style: italic; }
+.sol-in  { color: var(--verde); font-weight: 500; }
+.sol-out { color: var(--text-dim); }
+.sol-obj { color: var(--text-hi); font-weight: 700; }
+
+/* ── PANOU DREAPTA ── */
+#dreapta {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  min-width: 0;
+}
+
+/* ── BARĂ DE INSTRUMENTE ── */
+#bara-instrumente {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 16px;
+  background: var(--panou);
+  border-bottom: 1px solid var(--bordura);
+}
+
+.buton {
+  padding: 6px 14px;
+  border: 1px solid var(--bordura2);
+  background: transparent;
+  color: var(--text);
+  font-family: var(--mono);
+  font-size: 11.5px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s, color 0.15s, transform 0.1s;
+  white-space: nowrap;
+}
+.buton:hover  { border-color: var(--albastru); color: var(--text-hi); background: var(--albastru-dim); }
+.buton:active { transform: scale(0.96); }
+
+.buton-primar { border-color: var(--albastru); color: var(--albastru); }
+.buton-primar:hover { background: var(--albastru); color: #fff; border-color: var(--albastru); }
+
+.buton-pericol { border-color: #3a1a14; color: #c04830; }
+.buton-pericol:hover { background: #2a1008; border-color: var(--rosu); color: var(--rosu); }
+
+#insigna-shift {
+  margin-left: auto;
+  padding: 5px 12px;
+  border-radius: 4px;
+  font-size: 10.5px;
+  letter-spacing: 0.1em;
+  font-weight: 700;
+  border: 1.5px solid var(--bordura2);
+  color: var(--text-dim);
+  transition: all 0.15s;
+  user-select: none;
+}
+#insigna-shift.activ {
+  border-color: var(--chihlimbar);
+  color: var(--chihlimbar);
+  background: var(--chihlimbar-dim);
+  box-shadow: 0 0 12px rgba(240,160,48,0.18);
+}
+
+/* ── ZONA CANVAS ── */
+#container-canvas {
+  flex: 1;
+  position: relative;
+  overflow: hidden;
+  min-height: 0;
+}
+
+#canvas-graf {
+  display: block;
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  cursor: crosshair;
+}
+
+/* ── BARĂ DE AJUTOR ── */
+#bara-ajutor {
+  flex-shrink: 0;
+  padding: 5px 16px;
+  font-size: 10.5px;
+  color: var(--text-dim);
+  background: var(--panou);
+  border-top: 1px solid var(--bordura);
+  letter-spacing: 0.04em;
+}
+#bara-ajutor span { color: var(--albastru); }
+
+/* ── INDICATOR SELECȚIE ── */
+#indicator-selectie {
+  position: absolute;
+  bottom: 14px;
+  right: 14px;
+  padding: 6px 12px;
+  background: var(--chihlimbar-dim);
+  border: 1px solid var(--chihlimbar);
+  color: var(--chihlimbar);
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  border-radius: 4px;
+  display: none;
+  pointer-events: none;
+}
+#indicator-selectie.vizibil { display: block; }
+
+/* ── LEGENDĂ ── */
+#legenda {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  background: var(--panou2);
+  border: 1px solid var(--bordura);
+  border-radius: 6px;
+  padding: 10px 14px;
+  font-size: 10.5px;
+  line-height: 2;
+  color: var(--text-dim);
+  pointer-events: none;
+}
+.punct-legenda {
+  display: inline-block;
+  width: 10px; height: 10px;
+  border-radius: 50%;
+  margin-right: 6px;
+  vertical-align: middle;
+  border: 1.5px solid;
+}
+
+/* Scrollbar panou LP */
+pre { white-space: pre-wrap; word-break: break-word; }
+
+/* ── EDITOR GREUTATE NOD ── */
+#editor-greutate {
+  position: absolute;
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 14px;
+  background: var(--panou2);
+  border: 1.5px solid var(--chihlimbar);
+  border-radius: 8px;
+  box-shadow: 0 0 24px rgba(240,160,48,0.22), 0 4px 20px rgba(0,0,0,0.6);
+  z-index: 20;
+  pointer-events: all;
+  transform: translate(-50%, -130%);
+}
+#editor-greutate.vizibil { display: flex; }
+#editor-greutate label {
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  color: var(--chihlimbar);
+  text-transform: uppercase;
+  font-weight: 700;
+}
+#editor-greutate input {
+  width: 72px;
+  padding: 5px 8px;
+  background: #1a1206;
+  border: 1px solid var(--chihlimbar);
+  border-radius: 4px;
+  color: var(--chihlimbar);
+  font-family: var(--mono);
+  font-size: 15px;
+  font-weight: 700;
+  text-align: center;
+  outline: none;
+}
+#editor-greutate input:focus { box-shadow: 0 0 8px rgba(240,160,48,0.3); }
+#editor-greutate .butoane-editor { display: flex; gap: 6px; }
+#editor-greutate .buton-editor {
+  padding: 4px 10px;
+  border-radius: 4px;
+  font-family: var(--mono);
+  font-size: 11px;
+  cursor: pointer;
+  border: 1px solid;
+  transition: background 0.12s;
+}
+.buton-ok      { border-color: var(--chihlimbar); color: var(--chihlimbar); background: transparent; }
+.buton-ok:hover { background: var(--chihlimbar); color: #000; }
+.buton-anulare  { border-color: var(--bordura2); color: var(--text-dim); background: transparent; }
+.buton-anulare:hover { background: var(--bordura2); color: var(--text); }
+</style>
+</head>
+<body>
+<div id="app">
+
+  <!-- ANTET PRINCIPAL -->
+  <header id="antet">
+    <h1>Acoperire cu Vârfuri Ponderate</h1>
+    <span class="eticheta">Relaxare LP · Aproximare Factor 2</span>
+    <span id="statistici-graf">0 noduri · 0 muchii</span>
+  </header>
+
+  <div id="principal">
+
+    <!-- STÂNGA: PANOU LP -->
+    <aside id="panou-lp">
+      <div class="sectiune formulare">
+        <div class="titlu-sectiune">Formulare LP</div>
+        <div class="corp-sectiune">
+          <pre id="text-lp"><span class="cm">// Apasă pe canvas pentru a adăuga noduri.
+// Shift+click pe noduri pentru a adăuga muchii.
+// Formularea LP va apărea aici.</span></pre>
+        </div>
+      </div>
+      <div class="sectiune solutie">
+        <div class="titlu-sectiune">Soluție</div>
+        <div class="corp-sectiune">
+          <pre id="text-solutie"><span class="cm">// Apasă "Rezolvă LP" pentru a calcula
+// relaxarea LP și a extrage
+// acoperirea de aproximare de factor 2.</span></pre>
+        </div>
+      </div>
+    </aside>
+
+    <!-- DREAPTA: CANVAS -->
+    <div id="dreapta">
+      <div id="bara-instrumente">
+        <button class="buton buton-primar" id="btn-rezolva">▶  Rezolvă LP</button>
+        <button class="buton" id="btn-aleatoriu">↺  Greutăți Aleatoare</button>
+        <button class="buton buton-pericol" id="btn-sterge">✕  Șterge Graful</button>
+        <div id="insigna-shift">⇧ SHIFT: INACTIV</div>
+      </div>
+
+      <div id="container-canvas">
+        <canvas id="canvas-graf"></canvas>
+
+        <div id="legenda">
+          <div><span class="punct-legenda" style="background:#1a2a40;border-color:#4d8af0"></span>Nod</div>
+          <div><span class="punct-legenda" style="background:var(--chihlimbar-dim);border-color:var(--chihlimbar)"></span>Selectat</div>
+          <div><span class="punct-legenda" style="background:var(--verde-dim);border-color:var(--verde)"></span>În Acoperire</div>
+        </div>
+
+        <div id="indicator-selectie">⇧ 1 nod selectat — apasă pe alt nod</div>
+
+        <!-- Popup editor greutate nod -->
+        <div id="editor-greutate">
+          <label id="eticheta-editor">Greutatea nodului</label>
+          <input id="input-greutate" type="number" min="1" max="999" step="1" />
+          <div class="butoane-editor">
+            <button class="buton-editor buton-ok"      id="btn-confirma">✓ Aplică</button>
+            <button class="buton-editor buton-anulare" id="btn-anuleaza">✕</button>
+          </div>
+        </div>
+      </div>
+
+      <div id="bara-ajutor">
+        <span>Click</span> pe canvas → adaugă nod &nbsp;·&nbsp;
+        <span>Shift+Click</span> nod → conectează muchie &nbsp;·&nbsp;
+        <span>Shift+Click</span> muchie → șterge muchia &nbsp;·&nbsp;
+        <span>Ctrl+Click</span> nod → editează greutatea &nbsp;·&nbsp;
+        <span>Trage</span> nod → mută poziția
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+// ============================================================
+// STARE GLOBALĂ A GRAFULUI
+// ============================================================
+const G = {
+  noduri:       [],       // { id, x, y, w }
+  muchii:       [],       // { u, v }  (indici 0-based în vectorul noduri)
+  sel:          [],       // indici de noduri selectate pentru crearea muchiei
+  sol:          null,     // Array cu valorile x returnate de LP
+  acoperire:    new Set(), // indici noduri din acoperirea 2-aproximată
+  urmatorul_id: 1,
+  muchie_hover: -1,       // indicele muchiei evidențiate la hover cu Shift apăsat
+};
+
+const RAZA_NOD = 24; // raza cercului unui nod în pixeli
+
+// ============================================================
+// INIȚIALIZARE CANVAS
+// ============================================================
+const canvas = document.getElementById('canvas-graf');
+const ctx    = canvas.getContext('2d');
+
+function sincronizeazaDimensiune() {
+  // Redimensionăm canvas-ul să umple containerul
+  const container = canvas.parentElement;
+  canvas.width  = container.clientWidth;
+  canvas.height = container.clientHeight;
+  redeseneaza();
+}
+new ResizeObserver(sincronizeazaDimensiune).observe(canvas.parentElement);
+
+// ============================================================
+// FUNCȚII DE DESENARE
+// ============================================================
+function redeseneaza() {
+  const L = canvas.width, H = canvas.height;
+  ctx.clearRect(0, 0, L, H);
+  deseneazaGrila(L, H);
+  G.muchii.forEach((m, i) => deseneazaMuchie(m, i));
+  G.noduri.forEach((_, i) => deseneazaNod(i));
+}
+
+function deseneazaGrila(L, H) {
+  // Grila de fundal subtilă
+  ctx.save();
+  ctx.strokeStyle = 'rgba(30,38,51,0.7)';
+  ctx.lineWidth = 0.5;
+  const pas = 40;
+  for (let x = 0; x < L; x += pas) { ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,H); ctx.stroke(); }
+  for (let y = 0; y < H; y += pas) { ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(L,y); ctx.stroke(); }
+  ctx.restore();
+}
+
+function deseneazaMuchie(m, idx) {
+  const a = G.noduri[m.u], b = G.noduri[m.v];
+  const ambeloraAcoperire = G.acoperire.has(m.u) && G.acoperire.has(m.v);
+  const oricaraAcoperire  = G.acoperire.has(m.u) || G.acoperire.has(m.v);
+  const hover = G.muchie_hover === idx; // muchia este evidențiată pentru ștergere
+
+  ctx.save();
+  if (hover) {
+    // Efect de strălucire roșie la hover
+    ctx.shadowBlur  = 14;
+    ctx.shadowColor = 'rgba(240,96,74,0.7)';
+  }
+  ctx.beginPath();
+  ctx.moveTo(a.x, a.y);
+  ctx.lineTo(b.x, b.y);
+
+  // Culoarea muchiei depinde de starea sa
+  if (hover)                  { ctx.strokeStyle = '#f0604a'; ctx.lineWidth = 3; }
+  else if (ambeloraAcoperire) { ctx.strokeStyle = 'rgba(62,207,114,0.55)'; ctx.lineWidth = 2.5; }
+  else if (oricaraAcoperire)  { ctx.strokeStyle = 'rgba(62,207,114,0.25)'; ctx.lineWidth = 1.8; }
+  else                        { ctx.strokeStyle = 'rgba(60,80,110,0.7)';   ctx.lineWidth = 1.5; }
+  ctx.stroke();
+
+  // Indicator vizual de ștergere (✕) în mijlocul muchiei evidențiate
+  if (hover) {
+    const mx = (a.x + b.x) / 2, my = (a.y + b.y) / 2;
+    ctx.shadowBlur = 0;
+    ctx.fillStyle = '#f0604a';
+    ctx.beginPath();
+    ctx.arc(mx, my, 7, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = '#fff';
+    ctx.font = 'bold 10px monospace';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('✕', mx, my + 0.5);
+  }
+  ctx.restore();
+}
+
+function deseneazaNod(i) {
+  const n = G.noduri[i];
+  const selectat = G.sel.includes(i);
+  const acoperit = G.acoperire.has(i);
+
+  ctx.save();
+
+  // Efect de strălucire pentru noduri selectate sau din acoperire
+  if (selectat || acoperit) {
+    ctx.shadowBlur  = 20;
+    ctx.shadowColor = selectat ? 'rgba(240,160,48,0.5)' : 'rgba(62,207,114,0.45)';
+  }
+
+  // Umplere cerc nod
+  ctx.beginPath();
+  ctx.arc(n.x, n.y, RAZA_NOD, 0, Math.PI * 2);
+  const culoareUmplere = selectat ? '#2a1f08' :
+                         acoperit ? '#0d2018' : '#111d2e';
+  ctx.fillStyle = culoareUmplere;
+  ctx.fill();
+
+  // Contur cerc nod
+  ctx.strokeStyle = selectat ? '#f0a030' :
+                    acoperit ? '#3ecf72' : '#4d8af0';
+  ctx.lineWidth = (selectat || acoperit) ? 2.5 : 1.5;
+  ctx.stroke();
+  ctx.shadowBlur = 0;
+
+  // Eticheta cu ID-ul nodului
+  ctx.fillStyle = selectat ? '#f0c060' :
+                  acoperit ? '#5defa0' : '#79b8ff';
+  ctx.font = `bold 13px 'JetBrains Mono', monospace`;
+  ctx.textAlign    = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText(n.id, n.x, n.y - 5);
+
+  // Eticheta cu greutatea nodului (g = greutate)
+  ctx.fillStyle = selectat ? 'rgba(240,160,48,0.7)' :
+                  acoperit ? 'rgba(62,207,114,0.7)'  : 'rgba(192,207,224,0.55)';
+  ctx.font = `300 10px 'JetBrains Mono', monospace`;
+  ctx.fillText(`g=${n.w}`, n.x, n.y + 9);
+
+  ctx.restore();
+}
+
+// ============================================================
+// FUNCȚII DE HIT-TEST
+// ============================================================
+function nodLa(x, y) {
+  // Returnează indicele nodului care conține punctul (x, y), sau -1
+  for (let i = G.noduri.length - 1; i >= 0; i--) {
+    const n = G.noduri[i];
+    if (Math.hypot(x - n.x, y - n.y) <= RAZA_NOD + 3) return i;
+  }
+  return -1;
+}
+
+function muchieLa(px, py, prag = 9) {
+  // Distanță punct–segment; returnează indicele muchiei cel mai apropiate, sau -1
+  for (let i = 0; i < G.muchii.length; i++) {
+    const a = G.noduri[G.muchii[i].u], b = G.noduri[G.muchii[i].v];
+    const dx = b.x - a.x, dy = b.y - a.y;
+    const lungSq = dx*dx + dy*dy;
+    if (lungSq < 1) continue;
+    let t = ((px - a.x)*dx + (py - a.y)*dy) / lungSq;
+    t = Math.max(0, Math.min(1, t));
+    const cx = a.x + t*dx - px, cy = a.y + t*dy - py;
+    if (Math.hypot(cx, cy) <= prag) return i;
+  }
+  return -1;
+}
+
+// ============================================================
+// OPERAȚII PE GRAF
+// ============================================================
+function greutateAleatoare() { return Math.floor(Math.random() * 25) + 1; }
+
+function adaugaNod(x, y) {
+  G.noduri.push({ id: G.urmatorul_id++, x, y, w: greutateAleatoare() });
+  G.sol = null; G.acoperire.clear();
+  actualizeaza();
+}
+
+function adaugaMuchie(u, v) {
+  if (u === v) return; // nu permitem bucle (self-loops)
+  // Verificăm dacă muchia există deja (în orice direcție)
+  if (G.muchii.some(m => (m.u===u&&m.v===v)||(m.u===v&&m.v===u))) return;
+  G.muchii.push({ u, v });
+  G.sol = null; G.acoperire.clear();
+  actualizeaza();
+}
+
+// ============================================================
+// STARE DRAG (TRAGERE NOD)
+// ============================================================
+const drag = {
+  activ:      false,  // se trage un nod în prezent
+  indicNod:   -1,
+  startX:     0, startY:     0,  // coordonate canvas la apăsarea butonului
+  originX:    0, originY:    0,  // poziția nodului la momentul apăsării
+  miscat:     false,             // s-a depășit pragul minim de mișcare?
+  shiftJos:   false,             // Shift era apăsat la mousedown?
+  ctrlJos:    false,             // Ctrl era apăsat la mousedown?
+  clientXJos: 0, clientYJos: 0,  // poziția cursor la mousedown (coordonate fereastră)
+};
+const PRAG_DRAG = 5; // pixeli minimi pentru a declanșa dragul
+
+canvas.addEventListener('mousedown', e => {
+  if (e.button !== 0) return; // răspundem doar la click stânga
+  const rect = canvas.getBoundingClientRect();
+  const x = e.clientX - rect.left;
+  const y = e.clientY - rect.top;
+  const lovit = nodLa(x, y);
+
+  // Salvăm starea modificatorilor la momentul apăsării
+  drag.shiftJos   = e.shiftKey;
+  drag.ctrlJos    = e.ctrlKey || e.metaKey;
+  drag.clientXJos = e.clientX;
+  drag.clientYJos = e.clientY;
+  drag.miscat     = false;
+
+  // Inițiem tragerea doar dacă am lovit un nod fără modificatori de tastatură
+  if (lovit !== -1 && !e.shiftKey && !e.ctrlKey && !e.metaKey) {
+    drag.activ    = true;
+    drag.indicNod = lovit;
+    drag.startX   = x;
+    drag.startY   = y;
+    drag.originX  = G.noduri[lovit].x;
+    drag.originY  = G.noduri[lovit].y;
+    canvas.style.cursor = 'grabbing';
+    e.preventDefault();
+  }
+});
+
+canvas.addEventListener('mousemove', e => {
+  const rect = canvas.getBoundingClientRect();
+  const x = e.clientX - rect.left;
+  const y = e.clientY - rect.top;
+
+  // ── Actualizare poziție nod în timp ce se trage ──
+  if (drag.activ) {
+    const dx = x - drag.startX, dy = y - drag.startY;
+    if (!drag.miscat && Math.hypot(dx, dy) > PRAG_DRAG) drag.miscat = true;
+    if (drag.miscat) {
+      const n = G.noduri[drag.indicNod];
+      // Limităm nodul în interiorul canvas-ului
+      n.x = Math.max(RAZA_NOD, Math.min(canvas.width  - RAZA_NOD, drag.originX + dx));
+      n.y = Math.max(RAZA_NOD, Math.min(canvas.height - RAZA_NOD, drag.originY + dy));
+      redeseneaza();
+    }
+    return;
+  }
+
+  // ── Actualizare cursor și evidențiere muchie la hover ──
+  if (e.shiftKey) {
+    const lovit = nodLa(x, y);
+    if (lovit !== -1) {
+      canvas.style.cursor = 'pointer';
+      if (G.muchie_hover !== -1) { G.muchie_hover = -1; redeseneaza(); }
+    } else {
+      const mi = muchieLa(x, y);
+      canvas.style.cursor = mi !== -1 ? 'pointer' : 'crosshair';
+      if (G.muchie_hover !== mi) { G.muchie_hover = mi; redeseneaza(); }
+    }
+  } else if (e.ctrlKey || e.metaKey) {
+    const lovit = nodLa(x, y);
+    canvas.style.cursor = lovit !== -1 ? 'text' : 'crosshair';
+    if (G.muchie_hover !== -1) { G.muchie_hover = -1; redeseneaza(); }
+  } else {
+    const lovit = nodLa(x, y);
+    canvas.style.cursor = lovit !== -1 ? 'grab' : 'crosshair';
+    if (G.muchie_hover !== -1) { G.muchie_hover = -1; redeseneaza(); }
+  }
+});
+
+canvas.addEventListener('mouseup', e => {
+  if (e.button !== 0) return;
+  const rect = canvas.getBoundingClientRect();
+  const x = e.clientX - rect.left;
+  const y = e.clientY - rect.top;
+
+  const eraTragere = drag.activ && drag.miscat;
+  drag.activ = false;
+
+  if (eraTragere) {
+    // S-a terminat o tragere reală — resetăm cursorul fără acțiune suplimentară
+    canvas.style.cursor = 'grab';
+    return;
+  }
+
+  // Interpretăm evenimentul ca un click simplu
+  const lovit = nodLa(x, y);
+
+  if (drag.ctrlJos) {
+    // Ctrl+click pe nod → deschidem editorul de greutate
+    if (lovit !== -1) deschideEditorGreutate(lovit, drag.clientXJos, drag.clientYJos);
+    return;
+  }
+
+  if (drag.shiftJos) {
+    if (lovit !== -1) {
+      // Shift+click pe nod → selecție pentru creare muchie
+      const idx = G.sel.indexOf(lovit);
+      if (idx === -1) {
+        if (G.sel.length < 2) G.sel.push(lovit);
+      } else {
+        G.sel.splice(idx, 1);
+      }
+      // Dacă avem exact 2 noduri selectate, creăm muchia dintre ele
+      if (G.sel.length === 2) {
+        adaugaMuchie(G.sel[0], G.sel[1]);
+        G.sel = [];
+      }
+    } else {
+      // Shift+click pe zone goală → verificăm dacă e pe o muchie și o ștergem
+      const mi = muchieLa(x, y);
+      if (mi !== -1) {
+        G.muchii.splice(mi, 1);
+        G.muchie_hover = -1;
+        G.sol = null; G.acoperire.clear();
+        actualizeaza();
+        return;
+      }
+    }
+  } else {
+    // Click simplu: golim selecția curentă
+    G.sel = [];
+    // Dacă am apăsat pe o zonă goală, adăugăm un nod nou
+    if (lovit === -1) adaugaNod(x, y);
+  }
+
+  actualizeazaIndicatorSelectie();
+  redeseneaza();
+});
+
+canvas.addEventListener('mouseleave', () => {
+  // Resetăm evidențierea muchiei când cursorul iese din canvas
+  if (G.muchie_hover !== -1) { G.muchie_hover = -1; redeseneaza(); }
+});
+
+// Dacă butonul mouse-ului este eliberat în afara canvas-ului, terminăm dragul
+window.addEventListener('mouseup', e => {
+  if (e.button !== 0 || !drag.activ) return;
+  drag.activ = false;
+  canvas.style.cursor = 'crosshair';
+});
+
+// ============================================================
+// EDITOR GREUTATE NOD
+// ============================================================
+let _nodEditat = -1; // indicele nodului în curs de editare
+const editorEl       = document.getElementById('editor-greutate');
+const inputEditor    = document.getElementById('input-greutate');
+const etichetaEditor = document.getElementById('eticheta-editor');
+
+function deschideEditorGreutate(indicNod, clientX, clientY) {
+  _nodEditat = indicNod;
+  const n = G.noduri[indicNod];
+  etichetaEditor.textContent = `Nodul ${n.id} — greutate`;
+  inputEditor.value = n.w;
+  // Pozicionăm popup-ul relativ la containerul canvas
+  const container = document.getElementById('container-canvas');
+  const cRect = container.getBoundingClientRect();
+  editorEl.style.left = `${clientX - cRect.left}px`;
+  editorEl.style.top  = `${clientY - cRect.top}px`;
+  editorEl.classList.add('vizibil');
+  // Focusăm și selectăm valoarea existentă pentru editare rapidă
+  setTimeout(() => { inputEditor.focus(); inputEditor.select(); }, 30);
+}
+
+function inchideEditorGreutate(aplica) {
+  if (aplica && _nodEditat !== -1) {
+    const val = parseInt(inputEditor.value, 10);
+    // Validăm: valoarea trebuie să fie un număr întreg pozitiv
+    if (!isNaN(val) && val >= 1) {
+      G.noduri[_nodEditat].w = val;
+      G.sol = null; G.acoperire.clear();
+      actualizeaza();
+    }
+  }
+  _nodEditat = -1;
+  editorEl.classList.remove('vizibil');
+}
+
+document.getElementById('btn-confirma').addEventListener('click', () => inchideEditorGreutate(true));
+document.getElementById('btn-anuleaza').addEventListener('click', () => inchideEditorGreutate(false));
+inputEditor.addEventListener('keydown', e => {
+  if (e.key === 'Enter')  { e.preventDefault(); inchideEditorGreutate(true);  }
+  if (e.key === 'Escape') { e.preventDefault(); inchideEditorGreutate(false); }
+});
+// Închidem editorul când utilizatorul apasă în afara popup-ului
+document.addEventListener('mousedown', e => {
+  if (!editorEl.contains(e.target) && editorEl.classList.contains('vizibil')) {
+    inchideEditorGreutate(false);
+  }
+});
+
+// ============================================================
+// TASTATURĂ: BADGE SHIFT
+// ============================================================
+document.addEventListener('keydown', e => {
+  if (e.key === 'Shift') {
+    const b = document.getElementById('insigna-shift');
+    b.textContent = '⇧ SHIFT: ACTIV — click noduri/muchii';
+    b.classList.add('activ');
+  }
+});
+document.addEventListener('keyup', e => {
+  if (e.key === 'Shift') {
+    const b = document.getElementById('insigna-shift');
+    b.textContent = '⇧ SHIFT: INACTIV';
+    b.classList.remove('activ');
+  }
+});
+
+function actualizeazaIndicatorSelectie() {
+  const el = document.getElementById('indicator-selectie');
+  if (G.sel.length === 1) {
+    el.textContent = `⇧ Nodul ${G.noduri[G.sel[0]].id} selectat — apasă pe alt nod`;
+    el.classList.add('vizibil');
+  } else {
+    el.classList.remove('vizibil');
+  }
+}
+
+// ============================================================
+// BUTOANE PRINCIPALE
+// ============================================================
+document.getElementById('btn-aleatoriu').addEventListener('click', () => {
+  // Atribuim greutăți aleatoare noi tuturor nodurilor
+  G.noduri.forEach(n => n.w = greutateAleatoare());
+  G.sol = null; G.acoperire.clear();
+  actualizeaza();
+});
+
+document.getElementById('btn-sterge').addEventListener('click', () => {
+  // Resetăm complet graful și starea aplicației
+  G.noduri = []; G.muchii = []; G.sel = [];
+  G.sol = null; G.acoperire.clear();
+  G.urmatorul_id = 1;
+  actualizeazaIndicatorSelectie();
+  actualizeaza();
+});
+
+document.getElementById('btn-rezolva').addEventListener('click', () => {
+  // Verificăm că graful are cel puțin un nod și o muchie
+  if (G.noduri.length === 0 || G.muchii.length === 0) {
+    randeazaSolutie(null);
+    return;
+  }
+  const greutati   = G.noduri.map(n => n.w);
+  const listaMuchii = G.muchii.map(m => [m.u, m.v]);
+  const sol = rezolvaLP(G.noduri.length, greutati, listaMuchii);
+  G.sol = sol;
+  G.acoperire.clear();
+  // Selectăm în acoperire nodurile cu valoarea LP ≥ 0.5
+  sol.forEach((v, i) => { if (v >= 0.5 - 1e-6) G.acoperire.add(i); });
+  randeazaSolutie(sol);
+  redeseneaza();
+});
+
+// ============================================================
+// ACTUALIZARE GENERALĂ (LP + canvas)
+// ============================================================
+function actualizeaza() {
+  randeazaLP();
+  if (!G.sol) randeazaSolutie(null);
+  actualizeazaStatistici();
+  redeseneaza();
+}
+
+function actualizeazaStatistici() {
+  const nn = G.noduri.length, nm = G.muchii.length;
+  document.getElementById('statistici-graf').textContent =
+    `${nn} ${nn === 1 ? 'nod' : 'noduri'} · ${nm} ${nm === 1 ? 'muchie' : 'muchii'}`;
+}
+
+// ============================================================
+// AFIȘARE FORMULARE LP
+// ============================================================
+const SUB = '₀₁₂₃₄₅₆₇₈₉';
+function sub(n) { return String(n).split('').map(d => SUB[+d]).join(''); }
+
+function randeazaLP() {
+  const nd = G.noduri, ed = G.muchii;
+  let h = '';
+
+  if (nd.length === 0) {
+    document.getElementById('text-lp').innerHTML =
+      `<span class="cm">// Apasă pe canvas pentru a adăuga noduri.\n// Shift+click pe noduri pentru a adăuga muchii.\n// Formularea LP va apărea aici.</span>`;
+    return;
+  }
+
+  // Funcția obiectiv: minimizarea sumei ponderate
+  h += `<span class="kw">MINIMIZEAZĂ</span>\n  `;
+  h += nd.map(n => `<span class="wt">${n.w}</span><span class="op">·</span><span class="vr">x${sub(n.id)}</span>`).join(` <span class="op">+</span> `);
+  h += '\n\n';
+
+  // Restricțiile de acoperire: pentru fiecare muchie, cel puțin un capăt trebuie selectat
+  h += `<span class="kw">CU RESTRICȚIILE</span>\n`;
+  if (ed.length === 0) {
+    h += `  <span class="cm">// Nicio muchie încă</span>\n`;
+  } else {
+    for (const m of ed) {
+      const u = nd[m.u], v = nd[m.v];
+      h += `  <span class="vr">x${sub(u.id)}</span> <span class="op">+</span> <span class="vr">x${sub(v.id)}</span> <span class="op">≥</span> <span class="wt">1</span>   <span class="cm">// muchia ${u.id}–${v.id}</span>\n`;
+    }
+  }
+  h += '\n';
+
+  // Marginile variabilelor: relaxare LP (nu mai cerem valori întregi)
+  h += `<span class="kw">MARGINI</span>\n`;
+  h += `  <span class="wt">0</span> <span class="op">≤</span> <span class="vr">xᵢ</span> <span class="op">≤</span> <span class="wt">1</span>   <span class="cm">∀ i ∈ V</span>`;
+
+  document.getElementById('text-lp').innerHTML = h;
+  actualizeazaStatistici();
+}
+
+function randeazaSolutie(sol) {
+  const el = document.getElementById('text-solutie');
+  if (!sol) {
+    el.innerHTML = G.noduri.length === 0 || G.muchii.length === 0
+      ? `<span class="cm">// Construiește un graf cu cel puțin\n// o muchie, apoi apasă Rezolvă LP.</span>`
+      : `<span class="cm">// Apasă "Rezolvă LP" pentru a calcula\n// relaxarea LP și a extrage\n// acoperirea de aproximare de factor 2.</span>`;
+    return;
+  }
+
+  let h = `<span class="kw">SOLUȚIE LP</span>\n`;
+  let obiectivLP = 0;
+  for (let i = 0; i < G.noduri.length; i++) {
+    const n   = G.noduri[i];
+    const xi  = sol[i];
+    const inAcop = G.acoperire.has(i);
+    obiectivLP += n.w * xi;
+    const cls   = inAcop ? 'sol-in' : 'sol-out';
+    const marcaj = inAcop ? `  <span style="color:#3ecf7288">◀ ACOPERIRE</span>` : '';
+    h += `  <span class="${cls}">x${sub(n.id)} = ${xi.toFixed(4)}${marcaj}</span>\n`;
+  }
+
+  // Valoarea obiectivului după rotunjire la {0, 1}
+  const obiectivRotunjit = [...G.acoperire].reduce((s, i) => s + G.noduri[i].w, 0);
+
+  h += `\n<span class="kw">OBJ (LP)</span>    <span class="sol-obj">${obiectivLP.toFixed(4)}</span>\n`;
+  h += `<span class="kw">2-APROX</span>     <span class="sol-obj">${obiectivRotunjit}</span>\n`;
+  h += `<span class="cm">            ≤ 2×OPT_LP = ${(2*obiectivLP).toFixed(4)}</span>\n\n`;
+
+  if (G.acoperire.size > 0) {
+    const ids = [...G.acoperire].map(i => G.noduri[i].id).sort((a,b)=>a-b);
+    h += `<span class="kw">SET ACOPERIRE</span>\n`;
+    h += `  <span class="sol-in">{${ids.join(', ')}}</span>\n`;
+    h += `  <span class="cm">greutate totală = ${obiectivRotunjit}</span>`;
+  } else {
+    h += `<span class="cm">// Acoperire vidă (nicio muchie sau toate\n// valorile LP sunt strict sub 0.5)</span>`;
+  }
+
+  el.innerHTML = h;
+}
+
+// ============================================================
+// REZOLVATOR LP — Metoda Simplex cu Big-M (Minimizare)
+// ============================================================
+// Variabile:
+//   x[i]   — variabilele de decizie (0 ≤ x_i ≤ 1)
+//   s[e]   — variabile de surplus pentru restricțiile de acoperire (≥ 1)
+//   sl[i]  — variabile slack pentru restricțiile de margine superioară (≤ 1)
+//   a[e]   — variabile artificiale (penalizate cu Big-M în obiectiv)
+//
+// Forma standard a restricțiilor:
+//   Muchie e=(u,v): x_u + x_v - s_e + a_e = 1   (m restricții)
+//   Nod i:          x_i + sl_i            = 1   (n restricții)
+//
+// Obiectiv: min Σ(w_i · x_i) + M · Σ(a_e)
+function rezolvaLP(n, greutati, listaMuchii) {
+  if (n === 0 || listaMuchii.length === 0) return new Array(n).fill(0);
+
+  const m = listaMuchii.length;
+  const M = 1e8; // valoarea penalizării Big-M (mult mai mare decât orice greutate)
+
+  // Funcții auxiliare de indexare a coloanelor în tablou
+  const X  = i => i;             // variabilele de decizie
+  const S  = e => n + e;         // variabilele de surplus
+  const SL = i => n + m + i;     // variabilele slack
+  const A  = e => n + m + n + e; // variabilele artificiale
+
+  const nV = n + m + n + m; // numărul total de variabile (coloane)
+  const nC = m + n;         // numărul total de restricții (rânduri)
+
+  // Tabloul simplex: rândul 0 = coeficienții funcției obiectiv (formă minimizare)
+  //                 rândurile 1..nC = restricțiile
+  //                 coloana nV = termenul liber (RHS)
+  const T   = Array.from({length: nC + 1}, () => new Float64Array(nV + 1));
+  const baza = new Int32Array(nC); // variabila bazică corespunzătoare fiecărui rând
+
+  // Construim restricțiile de acoperire (câte una per muchie)
+  for (let e = 0; e < m; e++) {
+    const r = e + 1;
+    const [u, v] = listaMuchii[e];
+    T[r][X(u)] = 1;
+    T[r][X(v)] += 1;  // += pentru robustețe (u==v nu ar trebui să apară)
+    T[r][S(e)] = -1;
+    T[r][A(e)] = 1;
+    T[r][nV]   = 1;
+    baza[e]    = A(e); // variabila artificială este inițial bazică
+  }
+  // Construim restricțiile de margine superioară (câte una per nod)
+  for (let i = 0; i < n; i++) {
+    const r = m + i + 1;
+    T[r][X(i)]  = 1;
+    T[r][SL(i)] = 1;
+    T[r][nV]    = 1;
+    baza[m + i] = SL(i); // variabila slack este inițial bazică
+  }
+
+  // Inițializăm rândul obiectivului cu costurile variabilelor
+  for (let i = 0; i < n; i++) T[0][X(i)] = greutati[i];
+  for (let e = 0; e < m; e++) T[0][A(e)] = M; // penalizare Big-M
+
+  // Corectăm rândul obiectivului pentru variabilele artificiale inițial bazice
+  // (cerință simplex: costul redus al variabilelor bazice trebuie să fie 0)
+  for (let e = 0; e < m; e++) {
+    for (let j = 0; j <= nV; j++) T[0][j] -= M * T[e + 1][j];
+  }
+  // Variabilele slack SL(i) au costul 0 → nu necesită corecție
+
+  // Iterații principale ale algoritmului simplex
+  const MAX_ITER = 100000;
+  for (let iter = 0; iter < MAX_ITER; iter++) {
+    // Alegem coloana pivot: variabila cu costul redus cel mai negativ
+    let cp = -1, minCR = -1e-7;
+    for (let j = 0; j < nV; j++) {
+      if (T[0][j] < minCR) { minCR = T[0][j]; cp = j; }
+    }
+    if (cp < 0) break; // Toți coeficienții sunt ≥ 0 → soluție optimă
+
+    // Alegem rândul pivot prin testul raportului minim (regula Bland pentru stabilitate)
+    let rp = -1, minR = Infinity;
+    for (let r = 1; r <= nC; r++) {
+      if (T[r][cp] > 1e-9) {
+        const raport = T[r][nV] / T[r][cp];
+        if (raport < minR - 1e-12) { minR = raport; rp = r; }
+      }
+    }
+    if (rp < 0) break; // Problemă nemărginită (nu ar trebui să se întâmple pentru acest LP)
+
+    // Efectuăm pivotarea (eliminare Gauss–Jordan)
+    baza[rp - 1] = cp;
+    const pv = T[rp][cp];
+    for (let j = 0; j <= nV; j++) T[rp][j] /= pv; // normalizăm rândul pivot
+    for (let r = 0; r <= nC; r++) {
+      if (r === rp) continue;
+      const f = T[r][cp];
+      if (Math.abs(f) < 1e-14) continue;
+      for (let j = 0; j <= nV; j++) T[r][j] -= f * T[rp][j];
+    }
+  }
+
+  // Extragem valorile optime x_i din soluția bazică finală
+  const x = new Array(n).fill(0);
+  for (let r = 0; r < nC; r++) {
+    const bv = baza[r];
+    if (bv < n) x[bv] = Math.max(0, Math.min(1, T[r + 1][nV]));
+  }
+  return x;
+}
+
+// ============================================================
+// INIȚIALIZARE APLICAȚIE
+// ============================================================
+actualizeaza();
+setTimeout(sincronizeazaDimensiune, 60);
+</script>
+</body>
+</html>
