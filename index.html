@@ -21,6 +21,8 @@
   --chihlimbar-dim:  #3a2608;
   --verde:           #3ecf72;
   --verde-dim:       #0d2a1a;
+  --violet:          #c084fc;
+  --violet-dim:      #2a0a4a;
   --rosu:            #f0604a;
   --mono:            'JetBrains Mono', 'Courier New', monospace;
   --display:         'Syne', sans-serif;
@@ -108,6 +110,7 @@ html, body {
 .sectiune:last-child  { flex: 1; border-bottom: none; }
 .sectiune.formulare   { flex: 1.4; }
 .sectiune.solutie     { flex: 1; }
+.sectiune.optim       { flex: 0.9; }
 
 .titlu-sectiune {
   flex-shrink: 0;
@@ -142,6 +145,8 @@ html, body {
 .sol-in  { color: var(--verde); font-weight: 500; }
 .sol-out { color: var(--text-dim); }
 .sol-obj { color: var(--text-hi); font-weight: 700; }
+.sol-opt { color: var(--violet); font-weight: 500; }
+.titlu-sectiune.optim-title { color: var(--violet); background: #160a2a; }
 
 /* ── PANOU DREAPTA ── */
 #dreapta {
@@ -352,11 +357,18 @@ pre { white-space: pre-wrap; word-break: break-word; }
         </div>
       </div>
       <div class="sectiune solutie">
-        <div class="titlu-sectiune">Soluție</div>
+        <div class="titlu-sectiune">Soluție LP · 2-Aproximare</div>
         <div class="corp-sectiune">
           <pre id="text-solutie"><span class="cm">// Apasă "Rezolvă LP" pentru a calcula
 // relaxarea LP și a extrage
 // acoperirea de aproximare de factor 2.</span></pre>
+        </div>
+      </div>
+      <div class="sectiune optim">
+        <div class="titlu-sectiune optim-title">Soluție Optimă (Exactă)</div>
+        <div class="corp-sectiune">
+          <pre id="text-optim"><span class="cm">// Soluția optimă va fi calculată
+// simultan cu rezolvarea LP.</span></pre>
         </div>
       </div>
     </aside>
@@ -376,7 +388,8 @@ pre { white-space: pre-wrap; word-break: break-word; }
         <div id="legenda">
           <div><span class="punct-legenda" style="background:#1a2a40;border-color:#4d8af0"></span>Nod</div>
           <div><span class="punct-legenda" style="background:var(--chihlimbar-dim);border-color:var(--chihlimbar)"></span>Selectat</div>
-          <div><span class="punct-legenda" style="background:var(--verde-dim);border-color:var(--verde)"></span>În Acoperire</div>
+          <div><span class="punct-legenda" style="background:var(--verde-dim);border-color:var(--verde)"></span>2-Aproximare</div>
+          <div><span class="punct-legenda" style="background:var(--violet-dim);border-color:var(--violet)"></span>Optim</div>
         </div>
 
         <div id="indicator-selectie">⇧ 1 nod selectat — apasă pe alt nod</div>
@@ -414,6 +427,7 @@ const G = {
   sel:          [],       // indici de noduri selectate pentru crearea muchiei
   sol:          null,     // Array cu valorile x returnate de LP
   acoperire:    new Set(), // indici noduri din acoperirea 2-aproximată
+  optim:        new Set(), // indici noduri din acoperirea optimă (exactă)
   urmatorul_id: 1,
   muchie_hover: -1,       // indicele muchiei evidențiate la hover cu Shift apăsat
 };
@@ -501,8 +515,23 @@ function deseneazaNod(i) {
   const n = G.noduri[i];
   const selectat = G.sel.includes(i);
   const acoperit = G.acoperire.has(i);
+  const optim    = G.optim.has(i);
 
   ctx.save();
+
+  // Inel exterior violet pentru nodurile din soluția optimă
+  if (optim) {
+    ctx.beginPath();
+    ctx.arc(n.x, n.y, RAZA_NOD + 6, 0, Math.PI * 2);
+    ctx.strokeStyle = '#c084fc';
+    ctx.lineWidth = 2;
+    ctx.setLineDash([4, 3]);
+    ctx.shadowBlur  = 12;
+    ctx.shadowColor = 'rgba(192,132,252,0.5)';
+    ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.shadowBlur = 0;
+  }
 
   // Efect de strălucire pentru noduri selectate sau din acoperire
   if (selectat || acoperit) {
@@ -514,7 +543,8 @@ function deseneazaNod(i) {
   ctx.beginPath();
   ctx.arc(n.x, n.y, RAZA_NOD, 0, Math.PI * 2);
   const culoareUmplere = selectat ? '#2a1f08' :
-                         acoperit ? '#0d2018' : '#111d2e';
+                         acoperit ? '#0d2018' :
+                         optim    ? '#1a0a2e' : '#111d2e';
   ctx.fillStyle = culoareUmplere;
   ctx.fill();
 
@@ -576,7 +606,7 @@ function greutateAleatoare() { return Math.floor(Math.random() * 25) + 1; }
 
 function adaugaNod(x, y) {
   G.noduri.push({ id: G.urmatorul_id++, x, y, w: greutateAleatoare() });
-  G.sol = null; G.acoperire.clear();
+  G.sol = null; G.acoperire.clear(); G.optim.clear();
   actualizeaza();
 }
 
@@ -585,7 +615,7 @@ function adaugaMuchie(u, v) {
   // Verificăm dacă muchia există deja (în orice direcție)
   if (G.muchii.some(m => (m.u===u&&m.v===v)||(m.u===v&&m.v===u))) return;
   G.muchii.push({ u, v });
-  G.sol = null; G.acoperire.clear();
+  G.sol = null; G.acoperire.clear(); G.optim.clear();
   actualizeaza();
 }
 
@@ -716,7 +746,7 @@ canvas.addEventListener('mouseup', e => {
       if (mi !== -1) {
         G.muchii.splice(mi, 1);
         G.muchie_hover = -1;
-        G.sol = null; G.acoperire.clear();
+        G.sol = null; G.acoperire.clear(); G.optim.clear();
         actualizeaza();
         return;
       }
@@ -828,14 +858,14 @@ function actualizeazaIndicatorSelectie() {
 document.getElementById('btn-aleatoriu').addEventListener('click', () => {
   // Atribuim greutăți aleatoare noi tuturor nodurilor
   G.noduri.forEach(n => n.w = greutateAleatoare());
-  G.sol = null; G.acoperire.clear();
+  G.sol = null; G.acoperire.clear(); G.optim.clear();
   actualizeaza();
 });
 
 document.getElementById('btn-sterge').addEventListener('click', () => {
   // Resetăm complet graful și starea aplicației
   G.noduri = []; G.muchii = []; G.sel = [];
-  G.sol = null; G.acoperire.clear();
+  G.sol = null; G.acoperire.clear(); G.optim.clear();
   G.urmatorul_id = 1;
   actualizeazaIndicatorSelectie();
   actualizeaza();
@@ -845,16 +875,26 @@ document.getElementById('btn-rezolva').addEventListener('click', () => {
   // Verificăm că graful are cel puțin un nod și o muchie
   if (G.noduri.length === 0 || G.muchii.length === 0) {
     randeazaSolutie(null);
+    randeazaOptim(null);
     return;
   }
   const greutati   = G.noduri.map(n => n.w);
   const listaMuchii = G.muchii.map(m => [m.u, m.v]);
+
+  // Rezolvăm relaxarea LP
   const sol = rezolvaLP(G.noduri.length, greutati, listaMuchii);
   G.sol = sol;
   G.acoperire.clear();
   // Selectăm în acoperire nodurile cu valoarea LP ≥ 0.5
   sol.forEach((v, i) => { if (v >= 0.5 - 1e-6) G.acoperire.add(i); });
+
+  // Rezolvăm problema exactă prin forță brută
+  const optim = rezolvaOptim(G.noduri.length, greutati, listaMuchii);
+  G.optim.clear();
+  optim.forEach(i => G.optim.add(i));
+
   randeazaSolutie(sol);
+  randeazaOptim(optim, greutati);
   redeseneaza();
 });
 
@@ -863,7 +903,10 @@ document.getElementById('btn-rezolva').addEventListener('click', () => {
 // ============================================================
 function actualizeaza() {
   randeazaLP();
-  if (!G.sol) randeazaSolutie(null);
+  if (!G.sol) {
+    randeazaSolutie(null);
+    randeazaOptim(null);
+  }
   actualizeazaStatistici();
   redeseneaza();
 }
@@ -956,7 +999,89 @@ function randeazaSolutie(sol) {
 }
 
 // ============================================================
-// REZOLVATOR LP — Metoda Simplex cu Big-M (Minimizare)
+// AFIȘARE SOLUȚIE OPTIMĂ
+// ============================================================
+function randeazaOptim(optimIndici, greutati) {
+  const el = document.getElementById('text-optim');
+  if (!optimIndici) {
+    el.innerHTML = G.noduri.length === 0 || G.muchii.length === 0
+      ? `<span class="cm">// Construiește un graf cu cel puțin\n// o muchie, apoi apasă Rezolvă LP.</span>`
+      : `<span class="cm">// Soluția optimă va fi calculată\n// simultan cu rezolvarea LP.</span>`;
+    return;
+  }
+
+  const n = G.noduri.length;
+  const limita = 20; // forța brută e fezabilă până la ~20 noduri
+
+  if (n > limita) {
+    el.innerHTML = `<span class="cm">// Graful are ${n} noduri.\n// Forța brută e dezactivată\n// pentru n > ${limita}.</span>`;
+    return;
+  }
+
+  let h = `<span class="kw">SOLUȚIE OPTIMĂ</span>\n`;
+
+  // Afișăm fiecare nod, marcând dacă e în acoperirea optimă
+  for (let i = 0; i < n; i++) {
+    const nd = G.noduri[i];
+    const inOpt = optimIndici.includes(i);
+    const cls   = inOpt ? 'sol-opt' : 'sol-out';
+    const marcaj = inOpt ? `  <span style="color:#c084fc88">◀ OPTIM</span>` : '';
+    h += `  <span class="${cls}">x${sub(nd.id)} = ${inOpt ? '1' : '0'}${marcaj}</span>\n`;
+  }
+
+  const costOptim = optimIndici.reduce((s, i) => s + G.noduri[i].w, 0);
+  const costAprox = [...G.acoperire].reduce((s, i) => s + G.noduri[i].w, 0);
+  const raport    = costOptim > 0 ? (costAprox / costOptim).toFixed(4) : '—';
+
+  h += `\n<span class="kw">OBJ OPTIM</span>   <span class="sol-obj">${costOptim}</span>\n`;
+  h += `<span class="kw">OBJ APROX</span>   <span class="sol-obj">${costAprox}</span>\n`;
+  h += `<span class="cm">  raport = ${raport} (≤ 2.0000)</span>\n\n`;
+
+  const ids = optimIndici.map(i => G.noduri[i].id).sort((a,b)=>a-b);
+  h += `<span class="kw">SET OPTIM</span>\n`;
+  h += `  <span class="sol-opt">{${ids.join(', ')}}</span>`;
+
+  el.innerHTML = h;
+}
+
+// ============================================================
+// REZOLVATOR OPTIM — Forță brută (2ⁿ subseturi, n ≤ 20)
+// ============================================================
+// Parcurgem toate subseturile posibile de vârfuri și îl returnăm
+// pe cel de greutate minimă care acoperă toate muchiile.
+function rezolvaOptim(n, greutati, listaMuchii) {
+  if (n === 0 || listaMuchii.length === 0) return [];
+  if (n > 20) return []; // prea mare pentru forță brută
+
+  let costMin   = Infinity;
+  let optimBest = [];
+
+  // Iterăm prin toate cele 2ⁿ subseturi (reprezentate ca bitmask)
+  for (let mask = 0; mask < (1 << n); mask++) {
+    // Calculăm greutatea totală a subsetului curent
+    let cost = 0;
+    for (let i = 0; i < n; i++) {
+      if (mask & (1 << i)) cost += greutati[i];
+    }
+    // Nu merită să verificăm dacă e deja mai scump decât cel mai bun
+    if (cost >= costMin) continue;
+
+    // Verificăm dacă subsetul acoperă toate muchiile
+    let valid = true;
+    for (const [u, v] of listaMuchii) {
+      if (!(mask & (1 << u)) && !(mask & (1 << v))) { valid = false; break; }
+    }
+
+    if (valid) {
+      costMin   = cost;
+      optimBest = [];
+      for (let i = 0; i < n; i++) {
+        if (mask & (1 << i)) optimBest.push(i);
+      }
+    }
+  }
+  return optimBest;
+}
 // ============================================================
 // Variabile:
 //   x[i]   — variabilele de decizie (0 ≤ x_i ≤ 1)
