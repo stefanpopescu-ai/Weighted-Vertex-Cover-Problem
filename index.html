@@ -7,23 +7,23 @@
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,300;0,400;0,500;0,700;1,400&family=Syne:wght@700;800&display=swap" rel="stylesheet">
 <style>
 :root {
-  --bg:              #0b0e14;
-  --panou:           #10141c;
-  --panou2:          #141923;
-  --bordura:         #1e2633;
-  --bordura2:        #2a3546;
-  --text:            #c0cfe0;
-  --text-dim:        #5a6e87;
-  --text-hi:         #e8f0fc;
-  --albastru:        #4d8af0;
-  --albastru-dim:    #1a2e50;
-  --chihlimbar:      #f0a030;
-  --chihlimbar-dim:  #3a2608;
-  --verde:           #3ecf72;
-  --verde-dim:       #0d2a1a;
-  --violet:          #c084fc;
-  --violet-dim:      #2a0a4a;
-  --rosu:            #f0604a;
+  --bg:              #f4f6fa;
+  --panou:           #ffffff;
+  --panou2:          #eef1f7;
+  --bordura:         #dde2ea;
+  --bordura2:        #c8d0dc;
+  --text:            #374151;
+  --text-dim:        #8492a6;
+  --text-hi:         #111827;
+  --albastru:        #2563eb;
+  --albastru-dim:    #dbeafe;
+  --chihlimbar:      #d97706;
+  --chihlimbar-dim:  #fef3c7;
+  --verde:           #16a34a;
+  --verde-dim:       #dcfce7;
+  --violet:          #7c3aed;
+  --violet-dim:      #ede9fe;
+  --rosu:            #dc2626;
   --mono:            'JetBrains Mono', 'Courier New', monospace;
   --display:         'Syne', sans-serif;
 }
@@ -70,9 +70,9 @@ html, body {
   color: var(--albastru);
   text-transform: uppercase;
   padding: 3px 8px;
-  border: 1px solid var(--albastru-dim);
+  border: 1px solid #bfdbfe;
   border-radius: 3px;
-  background: #0d1d38;
+  background: #eff6ff;
 }
 
 #statistici-graf {
@@ -120,7 +120,7 @@ html, body {
   letter-spacing: 0.14em;
   text-transform: uppercase;
   color: var(--albastru);
-  background: #0d1524;
+  background: #eff6ff;
   border-bottom: 1px solid var(--bordura);
 }
 
@@ -137,16 +137,16 @@ html, body {
 .corp-sectiune::-webkit-scrollbar-thumb { background: var(--bordura2); border-radius: 2px; }
 
 /* Culori sintaxă LP */
-.kw  { color: #e07b3c; font-weight: 700; }
-.vr  { color: #79b8ff; }
-.wt  { color: #f0b420; }
+.kw  { color: #b45309; font-weight: 700; }
+.vr  { color: #1d4ed8; }
+.wt  { color: #b45309; }
 .op  { color: var(--text-dim); }
 .cm  { color: var(--text-dim); font-style: italic; }
 .sol-in  { color: var(--verde); font-weight: 500; }
 .sol-out { color: var(--text-dim); }
 .sol-obj { color: var(--text-hi); font-weight: 700; }
 .sol-opt { color: var(--violet); font-weight: 500; }
-.titlu-sectiune.optim-title { color: var(--violet); background: #160a2a; }
+.titlu-sectiune.optim-title { color: var(--violet); background: #f5f3ff; }
 
 /* ── PANOU DREAPTA ── */
 #dreapta {
@@ -180,14 +180,14 @@ html, body {
   transition: border-color 0.15s, background 0.15s, color 0.15s, transform 0.1s;
   white-space: nowrap;
 }
-.buton:hover  { border-color: var(--albastru); color: var(--text-hi); background: var(--albastru-dim); }
+.buton:hover  { border-color: var(--albastru); color: var(--albastru); background: var(--albastru-dim); }
 .buton:active { transform: scale(0.96); }
 
 .buton-primar { border-color: var(--albastru); color: var(--albastru); }
 .buton-primar:hover { background: var(--albastru); color: #fff; border-color: var(--albastru); }
 
-.buton-pericol { border-color: #3a1a14; color: #c04830; }
-.buton-pericol:hover { background: #2a1008; border-color: var(--rosu); color: var(--rosu); }
+.buton-pericol { border-color: #fecaca; color: var(--rosu); }
+.buton-pericol:hover { background: #fee2e2; border-color: var(--rosu); color: var(--rosu); }
 
 #insigna-shift {
   margin-left: auto;
@@ -205,7 +205,7 @@ html, body {
   border-color: var(--chihlimbar);
   color: var(--chihlimbar);
   background: var(--chihlimbar-dim);
-  box-shadow: 0 0 12px rgba(240,160,48,0.18);
+  box-shadow: 0 0 10px rgba(217,119,6,0.15);
 }
 
 /* ── ZONA CANVAS ── */
@@ -288,10 +288,10 @@ pre { white-space: pre-wrap; word-break: break-word; }
   align-items: center;
   gap: 8px;
   padding: 12px 14px;
-  background: var(--panou2);
+  background: #ffffff;
   border: 1.5px solid var(--chihlimbar);
   border-radius: 8px;
-  box-shadow: 0 0 24px rgba(240,160,48,0.22), 0 4px 20px rgba(0,0,0,0.6);
+  box-shadow: 0 4px 24px rgba(0,0,0,0.12), 0 1px 6px rgba(0,0,0,0.08);
   z-index: 20;
   pointer-events: all;
   transform: translate(-50%, -130%);
@@ -307,17 +307,17 @@ pre { white-space: pre-wrap; word-break: break-word; }
 #editor-greutate input {
   width: 72px;
   padding: 5px 8px;
-  background: #1a1206;
+  background: #fffbeb;
   border: 1px solid var(--chihlimbar);
   border-radius: 4px;
-  color: var(--chihlimbar);
+  color: #92400e;
   font-family: var(--mono);
   font-size: 15px;
   font-weight: 700;
   text-align: center;
   outline: none;
 }
-#editor-greutate input:focus { box-shadow: 0 0 8px rgba(240,160,48,0.3); }
+#editor-greutate input:focus { box-shadow: 0 0 0 3px rgba(217,119,6,0.15); }
 #editor-greutate .butoane-editor { display: flex; gap: 6px; }
 #editor-greutate .buton-editor {
   padding: 4px 10px;
@@ -329,7 +329,7 @@ pre { white-space: pre-wrap; word-break: break-word; }
   transition: background 0.12s;
 }
 .buton-ok      { border-color: var(--chihlimbar); color: var(--chihlimbar); background: transparent; }
-.buton-ok:hover { background: var(--chihlimbar); color: #000; }
+.buton-ok:hover { background: var(--chihlimbar); color: #fff; }
 .buton-anulare  { border-color: var(--bordura2); color: var(--text-dim); background: transparent; }
 .buton-anulare:hover { background: var(--bordura2); color: var(--text); }
 </style>
@@ -386,7 +386,7 @@ pre { white-space: pre-wrap; word-break: break-word; }
         <canvas id="canvas-graf"></canvas>
 
         <div id="legenda">
-          <div><span class="punct-legenda" style="background:#1a2a40;border-color:#4d8af0"></span>Nod</div>
+          <div><span class="punct-legenda" style="background:#dbeafe;border-color:#2563eb"></span>Nod</div>
           <div><span class="punct-legenda" style="background:var(--chihlimbar-dim);border-color:var(--chihlimbar)"></span>Selectat</div>
           <div><span class="punct-legenda" style="background:var(--verde-dim);border-color:var(--verde)"></span>2-Aproximare</div>
           <div><span class="punct-legenda" style="background:var(--violet-dim);border-color:var(--violet)"></span>Optim</div>
@@ -463,7 +463,7 @@ function redeseneaza() {
 function deseneazaGrila(L, H) {
   // Grila de fundal subtilă
   ctx.save();
-  ctx.strokeStyle = 'rgba(30,38,51,0.7)';
+  ctx.strokeStyle = 'rgba(180,192,210,0.5)';
   ctx.lineWidth = 0.5;
   const pas = 40;
   for (let x = 0; x < L; x += pas) { ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,H); ctx.stroke(); }
@@ -480,25 +480,25 @@ function deseneazaMuchie(m, idx) {
   ctx.save();
   if (hover) {
     // Efect de strălucire roșie la hover
-    ctx.shadowBlur  = 14;
-    ctx.shadowColor = 'rgba(240,96,74,0.7)';
+    ctx.shadowBlur  = 10;
+    ctx.shadowColor = 'rgba(220,38,38,0.4)';
   }
   ctx.beginPath();
   ctx.moveTo(a.x, a.y);
   ctx.lineTo(b.x, b.y);
 
   // Culoarea muchiei depinde de starea sa
-  if (hover)                  { ctx.strokeStyle = '#f0604a'; ctx.lineWidth = 3; }
-  else if (ambeloraAcoperire) { ctx.strokeStyle = 'rgba(62,207,114,0.55)'; ctx.lineWidth = 2.5; }
-  else if (oricaraAcoperire)  { ctx.strokeStyle = 'rgba(62,207,114,0.25)'; ctx.lineWidth = 1.8; }
-  else                        { ctx.strokeStyle = 'rgba(60,80,110,0.7)';   ctx.lineWidth = 1.5; }
+  if (hover)                  { ctx.strokeStyle = '#dc2626'; ctx.lineWidth = 3; }
+  else if (ambeloraAcoperire) { ctx.strokeStyle = 'rgba(22,163,74,0.5)';  ctx.lineWidth = 2.5; }
+  else if (oricaraAcoperire)  { ctx.strokeStyle = 'rgba(22,163,74,0.25)'; ctx.lineWidth = 1.8; }
+  else                        { ctx.strokeStyle = 'rgba(140,160,190,0.7)'; ctx.lineWidth = 1.5; }
   ctx.stroke();
 
   // Indicator vizual de ștergere (✕) în mijlocul muchiei evidențiate
   if (hover) {
     const mx = (a.x + b.x) / 2, my = (a.y + b.y) / 2;
     ctx.shadowBlur = 0;
-    ctx.fillStyle = '#f0604a';
+    ctx.fillStyle = '#dc2626';
     ctx.beginPath();
     ctx.arc(mx, my, 7, 0, Math.PI * 2);
     ctx.fill();
@@ -523,11 +523,11 @@ function deseneazaNod(i) {
   if (optim) {
     ctx.beginPath();
     ctx.arc(n.x, n.y, RAZA_NOD + 6, 0, Math.PI * 2);
-    ctx.strokeStyle = '#c084fc';
+    ctx.strokeStyle = '#7c3aed';
     ctx.lineWidth = 2;
     ctx.setLineDash([4, 3]);
-    ctx.shadowBlur  = 12;
-    ctx.shadowColor = 'rgba(192,132,252,0.5)';
+    ctx.shadowBlur  = 8;
+    ctx.shadowColor = 'rgba(124,58,237,0.25)';
     ctx.stroke();
     ctx.setLineDash([]);
     ctx.shadowBlur = 0;
@@ -535,37 +535,37 @@ function deseneazaNod(i) {
 
   // Efect de strălucire pentru noduri selectate sau din acoperire
   if (selectat || acoperit) {
-    ctx.shadowBlur  = 20;
-    ctx.shadowColor = selectat ? 'rgba(240,160,48,0.5)' : 'rgba(62,207,114,0.45)';
+    ctx.shadowBlur  = 14;
+    ctx.shadowColor = selectat ? 'rgba(217,119,6,0.35)' : 'rgba(22,163,74,0.3)';
   }
 
   // Umplere cerc nod
   ctx.beginPath();
   ctx.arc(n.x, n.y, RAZA_NOD, 0, Math.PI * 2);
-  const culoareUmplere = selectat ? '#2a1f08' :
-                         acoperit ? '#0d2018' :
-                         optim    ? '#1a0a2e' : '#111d2e';
+  const culoareUmplere = selectat ? '#fef3c7' :
+                         acoperit ? '#f0fdf4' :
+                         optim    ? '#f5f3ff' : '#ffffff';
   ctx.fillStyle = culoareUmplere;
   ctx.fill();
 
   // Contur cerc nod
-  ctx.strokeStyle = selectat ? '#f0a030' :
-                    acoperit ? '#3ecf72' : '#4d8af0';
+  ctx.strokeStyle = selectat ? '#d97706' :
+                    acoperit ? '#22c55e' : '#2563eb';
   ctx.lineWidth = (selectat || acoperit) ? 2.5 : 1.5;
   ctx.stroke();
   ctx.shadowBlur = 0;
 
   // Eticheta cu ID-ul nodului
-  ctx.fillStyle = selectat ? '#f0c060' :
-                  acoperit ? '#5defa0' : '#79b8ff';
+  ctx.fillStyle = selectat ? '#92400e' :
+                  acoperit ? '#15803d' : '#1e40af';
   ctx.font = `bold 13px 'JetBrains Mono', monospace`;
   ctx.textAlign    = 'center';
   ctx.textBaseline = 'middle';
   ctx.fillText(n.id, n.x, n.y - 5);
 
   // Eticheta cu greutatea nodului (g = greutate)
-  ctx.fillStyle = selectat ? 'rgba(240,160,48,0.7)' :
-                  acoperit ? 'rgba(62,207,114,0.7)'  : 'rgba(192,207,224,0.55)';
+  ctx.fillStyle = selectat ? 'rgba(146,64,14,0.7)' :
+                  acoperit ? 'rgba(21,128,61,0.7)'  : 'rgba(107,114,128,0.8)';
   ctx.font = `300 10px 'JetBrains Mono', monospace`;
   ctx.fillText(`g=${n.w}`, n.x, n.y + 9);
 
